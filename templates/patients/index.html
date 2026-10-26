@@ -1,0 +1,131 @@
+
+{% extends "base.html" %}
+
+{% block title %}Patient Management | ClinicCare{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <div>
+        <h1 class="h3 fw-bold">Patient Management</h1>
+        <p class="text-secondary mb-0">Register, search and manage patient records.</p>
+    </div>
+    <span class="badge text-bg-primary fs-6">
+        {{ patients|length }} patient(s)
+    </span>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body p-4">
+        <h2 class="h5 fw-bold mb-3">Register a New Patient</h2>
+
+        <form method="POST" action="{{ url_for('patients') }}">
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label for="full_name" class="form-label">Full Name *</label>
+                    <input id="full_name" name="full_name" class="form-control"
+                           maxlength="100" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="date_of_birth" class="form-label">Date of Birth *</label>
+                    <input id="date_of_birth" name="date_of_birth"
+                           type="date" class="form-control"
+                           max="{{ today }}" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="gender" class="form-label">Gender *</label>
+                    <select id="gender" name="gender" class="form-select" required>
+                        <option value="">Select gender</option>
+                        <option value="Female">Female</option>
+                        <option value="Male">Male</option>
+                        <option value="Other">Other</option>
+                        <option value="Prefer not to say">Prefer not to say</option>
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="phone" class="form-label">Phone Number *</label>
+                    <input id="phone" name="phone" type="tel"
+                           class="form-control" maxlength="20" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="email" class="form-label">Email Address</label>
+                    <input id="email" name="email" type="email"
+                           class="form-control" maxlength="254">
+                </div>
+
+                <div class="col-md-6">
+                    <label for="address" class="form-label">Address</label>
+                    <input id="address" name="address"
+                           class="form-control" maxlength="300">
+                </div>
+            </div>
+
+            <p class="text-secondary small mt-3">Fields marked * are required.</p>
+            <button type="submit" class="btn btn-primary">Register Patient</button>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-4">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+            <h2 class="h5 fw-bold mb-0">Patient Records</h2>
+            <form method="GET" action="{{ url_for('patients') }}" class="d-flex gap-2">
+                <input name="q" value="{{ search_query }}"
+                       class="form-control" placeholder="Search by ID, name or phone">
+                <button class="btn btn-outline-primary" type="submit">Search</button>
+            </form>
+        </div>
+
+        {% if patients %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Patient ID</th>
+                        <th>Full Name</th>
+                        <th>Date of Birth</th>
+                        <th>Gender</th>
+                        <th>Phone</th>
+                        <th>Email</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for patient in patients %}
+                    <tr>
+                        <td>{{ patient['patient_code'] or ('P-' ~ '%05d'|format(patient['id'])) }}</td>
+                        <td>{{ patient['full_name'] }}</td>
+                        <td>{{ patient['date_of_birth'] }}</td>
+                        <td>{{ patient['gender'] }}</td>
+                        <td>{{ patient['phone'] }}</td>
+                        <td>{{ patient['email'] or '—' }}</td>
+                        <td class="text-nowrap">
+                            <a class="btn btn-sm btn-outline-primary"
+                               href="{{ url_for('view_patient', patient_id=patient['id']) }}">View</a>
+                            <a class="btn btn-sm btn-outline-secondary"
+                               href="{{ url_for('edit_patient', patient_id=patient['id']) }}">Edit</a>
+                            <form method="POST"
+                                  action="{{ url_for('delete_patient', patient_id=patient['id']) }}"
+                                  class="d-inline"
+                                  onsubmit="return confirm('Delete this patient record? Related appointment rules may prevent deletion.');">
+                                <button class="btn btn-sm btn-outline-danger" type="submit">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+            <h3 class="h6">No patient records found</h3>
+            <p class="text-secondary mb-0">Register a patient using the form above to get started.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

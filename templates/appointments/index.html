@@ -1,0 +1,319 @@
+```html
+{% extends "base.html" %}
+
+{% block title %}Appointment Management | ClinicCare{% endblock %}
+
+{% block content %}
+
+<!-- Page heading -->
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <div>
+        <h1 class="h3 fw-bold">Appointment Management</h1>
+        <p class="text-secondary mb-0">
+            Schedule, view, reschedule and manage clinic appointments.
+        </p>
+    </div>
+
+    <span class="badge text-bg-primary fs-6">
+        {{ appointments|length }} appointment(s)
+    </span>
+</div>
+
+<!-- Book appointment -->
+<div class="card shadow-sm mb-4">
+    <div class="card-body p-4">
+        <h2 class="h5 fw-bold mb-3">Book a New Appointment</h2>
+
+        {% if patients %}
+        <form method="POST" action="{{ url_for('appointments') }}">
+            <div class="row g-3">
+
+                <div class="col-md-6">
+                    <label for="patient_id" class="form-label">
+                        Patient <span class="text-danger">*</span>
+                    </label>
+
+                    <select id="patient_id"
+                            name="patient_id"
+                            class="form-select"
+                            required>
+                        <option value="">Select patient</option>
+
+                        {% for patient in patients %}
+                        <option value="{{ patient['id'] }}">
+                            {{ patient['patient_code'] }} — {{ patient['full_name'] }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="doctor_name" class="form-label">
+                        Doctor <span class="text-danger">*</span>
+                    </label>
+
+                    <input type="text"
+                           id="doctor_name"
+                           name="doctor_name"
+                           class="form-control"
+                           maxlength="100"
+                           placeholder="e.g. Dr. Sharma"
+                           required>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="appointment_date" class="form-label">
+                        Date <span class="text-danger">*</span>
+                    </label>
+
+                    <input type="date"
+                           id="appointment_date"
+                           name="appointment_date"
+                           class="form-control"
+                           min="{{ today }}"
+                           required>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="appointment_time" class="form-label">
+                        Time <span class="text-danger">*</span>
+                    </label>
+
+                    <input type="time"
+                           id="appointment_time"
+                           name="appointment_time"
+                           class="form-control"
+                           required>
+                </div>
+
+                <div class="col-12">
+                    <label for="reason" class="form-label">
+                        Reason for Appointment <span class="text-danger">*</span>
+                    </label>
+
+                    <textarea id="reason"
+                              name="reason"
+                              class="form-control"
+                              rows="3"
+                              maxlength="500"
+                              placeholder="Enter the reason for the appointment"
+                              required></textarea>
+                </div>
+            </div>
+
+            <p class="text-secondary mt-3 mb-3">
+                Fields marked with * are required.
+            </p>
+
+            <button type="submit" class="btn btn-primary">
+                Book Appointment
+            </button>
+        </form>
+
+        {% else %}
+        <div class="alert alert-info mb-0">
+            Register a patient before booking an appointment.
+            <a href="{{ url_for('patients') }}" class="alert-link">
+                Go to Patient Management
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Appointment records -->
+<div class="card shadow-sm">
+    <div class="card-body p-4">
+
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+            <h2 class="h5 fw-bold mb-0">Appointment Records</h2>
+
+            <!-- Status filter: GET request -->
+            <form method="GET"
+                  action="{{ url_for('appointments') }}"
+                  class="d-flex flex-wrap align-items-center gap-2">
+
+                <label for="status" class="visually-hidden">
+                    Filter by appointment status
+                </label>
+
+                <select id="status"
+                        name="status"
+                        class="form-select"
+                        style="min-width: 170px;">
+
+                    <option value=""
+                        {% if not status_filter %}selected{% endif %}>
+                        All statuses
+                    </option>
+
+                    <option value="Scheduled"
+                        {% if status_filter == 'Scheduled' %}selected{% endif %}>
+                        Scheduled
+                    </option>
+
+                    <option value="Completed"
+                        {% if status_filter == 'Completed' %}selected{% endif %}>
+                        Completed
+                    </option>
+
+                    <option value="Cancelled"
+                        {% if status_filter == 'Cancelled' %}selected{% endif %}>
+                        Cancelled
+                    </option>
+                </select>
+
+                <button type="submit" class="btn btn-outline-primary">
+                    Filter
+                </button>
+
+                {% if status_filter %}
+                <a href="{{ url_for('appointments') }}"
+                   class="btn btn-outline-secondary">
+                    Clear
+                </a>
+                {% endif %}
+            </form>
+        </div>
+
+        {% if appointments %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Patient</th>
+                        <th>Doctor</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for appointment in appointments %}
+                    <tr>
+                        <!-- FIX: use full_name from the app.py JOIN -->
+                        <td>
+                            <div class="fw-semibold">
+                                {{ appointment['full_name'] }}
+                            </div>
+                            <small class="text-secondary">
+                                {{ appointment['patient_code'] }}
+                            </small>
+                        </td>
+
+                        <td>{{ appointment['doctor_name'] }}</td>
+                        <td>{{ appointment['appointment_date'] }}</td>
+                        <td>{{ appointment['appointment_time'] }}</td>
+                        <td>{{ appointment['reason'] }}</td>
+
+                        <td>
+                            {% if appointment['status'] == 'Scheduled' %}
+                            <span class="badge text-bg-primary">Scheduled</span>
+                            {% elif appointment['status'] == 'Completed' %}
+                            <span class="badge text-bg-success">Completed</span>
+                            {% elif appointment['status'] == 'Cancelled' %}
+                            <span class="badge text-bg-danger">Cancelled</span>
+                            {% else %}
+                            <span class="badge text-bg-secondary">
+                                {{ appointment['status'] }}
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <div class="d-flex flex-wrap gap-1">
+
+                                {% if appointment['status'] == 'Scheduled' %}
+
+                                <a class="btn btn-sm btn-outline-secondary"
+                                   href="{{ url_for(
+                                       'edit_appointment',
+                                       appointment_id=appointment['id']
+                                   ) }}">
+                                    Edit
+                                </a>
+
+                                <form method="POST"
+                                      action="{{ url_for(
+                                          'update_appointment_status',
+                                          appointment_id=appointment['id']
+                                      ) }}"
+                                      class="d-inline"
+                                      onsubmit="return confirm('Mark this appointment as completed?');">
+
+                                    <input type="hidden"
+                                           name="status"
+                                           value="Completed">
+
+                                    <button type="submit"
+                                            class="btn btn-sm btn-outline-success">
+                                        Complete
+                                    </button>
+                                </form>
+
+                                <form method="POST"
+                                      action="{{ url_for(
+                                          'update_appointment_status',
+                                          appointment_id=appointment['id']
+                                      ) }}"
+                                      class="d-inline"
+                                      onsubmit="return confirm('Cancel this appointment?');">
+
+                                    <input type="hidden"
+                                           name="status"
+                                           value="Cancelled">
+
+                                    <button type="submit"
+                                            class="btn btn-sm btn-outline-danger">
+                                        Cancel
+                                    </button>
+                                </form>
+
+                                {% else %}
+
+                                <span class="text-secondary small">
+                                    No actions available
+                                </span>
+
+                                {% endif %}
+
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% else %}
+        <div class="text-center py-5">
+            <h3 class="h6 fw-semibold">
+                No appointments found
+            </h3>
+
+            {% if status_filter %}
+            <p class="text-secondary mb-3">
+                There are no appointments with status "{{ status_filter }}".
+            </p>
+
+            <a href="{{ url_for('appointments') }}"
+               class="btn btn-outline-primary">
+                Show All Appointments
+            </a>
+
+            {% else %}
+            <p class="text-secondary mb-0">
+                Book an appointment using the form above.
+            </p>
+            {% endif %}
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}
+```

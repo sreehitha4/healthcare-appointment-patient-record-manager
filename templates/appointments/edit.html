@@ -1,0 +1,137 @@
+```html
+{% extends "base.html" %}
+
+{% block title %}Edit Appointment | ClinicCare{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <div>
+        <h1 class="h3 fw-bold">Edit Appointment</h1>
+        <p class="text-secondary mb-0">
+            Update the patient, doctor, date, time or reason for this appointment.
+        </p>
+    </div>
+
+    <a href="{{ url_for('appointments') }}" class="btn btn-outline-primary">
+        Back to Appointments
+    </a>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-body p-4">
+
+        <h2 class="h5 fw-bold mb-4">Appointment Details</h2>
+
+        <form method="POST"
+              action="{{ url_for('edit_appointment', appointment_id=appointment['id']) }}">
+
+            <div class="row g-3">
+
+                <div class="col-md-6">
+                    <label for="patient_id" class="form-label">
+                        Patient <span class="text-danger">*</span>
+                    </label>
+
+                    <select
+                        class="form-select"
+                        id="patient_id"
+                        name="patient_id"
+                        required>
+
+                        <option value="">Select a patient</option>
+
+                        {% for patient in patients %}
+                        <option
+                            value="{{ patient['id'] }}"
+                            {% if patient['id'] == appointment['patient_id'] %}selected{% endif %}>
+                            {{ patient['patient_code'] }} — {{ patient['full_name'] }}
+                        </option>
+                        {% endfor %}
+
+                    </select>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="doctor_name" class="form-label">
+                        Doctor <span class="text-danger">*</span>
+                    </label>
+
+                    <input
+                        type="text"
+                        class="form-control"
+                        id="doctor_name"
+                        name="doctor_name"
+                        value="{{ appointment['doctor_name'] }}"
+                        maxlength="100"
+                        placeholder="e.g. Dr. Sharma"
+                        required>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="appointment_date" class="form-label">
+                        Appointment Date <span class="text-danger">*</span>
+                    </label>
+
+                    <input
+                        type="date"
+                        class="form-control"
+                        id="appointment_date"
+                        name="appointment_date"
+                        value="{{ appointment['appointment_date'] }}"
+                        min="{{ today }}"
+                        required>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="appointment_time" class="form-label">
+                        Appointment Time <span class="text-danger">*</span>
+                    </label>
+
+                    <input
+                        type="time"
+                        class="form-control"
+                        id="appointment_time"
+                        name="appointment_time"
+                        value="{{ appointment['appointment_time'] }}"
+                        required>
+                </div>
+
+                <div class="col-12">
+                    <label for="reason" class="form-label">
+                        Reason for Appointment <span class="text-danger">*</span>
+                    </label>
+
+                    <textarea
+                        class="form-control"
+                        id="reason"
+                        name="reason"
+                        rows="4"
+                        maxlength="500"
+                        placeholder="Enter the reason for the appointment"
+                        required>{{ appointment['reason'] }}</textarea>
+                </div>
+
+            </div>
+
+            <p class="text-secondary mt-3 mb-3">
+                Fields marked with * are required.
+            </p>
+
+            <div class="d-flex flex-wrap gap-2">
+                <button type="submit" class="btn btn-primary">
+                    Save Changes
+                </button>
+
+                <a href="{{ url_for('appointments') }}"
+                   class="btn btn-outline-secondary">
+                    Cancel
+                </a>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+```
